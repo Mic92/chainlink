@@ -253,7 +253,9 @@ type answerParams struct {
 func checkSubmission(t *testing.T, p answerParams, currentBalance int64, receiptBlock uint64) {
 	t.Helper()
 	if receiptBlock == 0 {
-		receiptBlock = p.fa.backend.Blockchain().CurrentBlock().Number.Uint64()
+		h, err := p.fa.backend.HeaderByNumber(testutils.Context(t), nil)
+		require.NoError(t, err)
+		receiptBlock = h.Number.Uint64()
 	}
 	blockRange := &bind.FilterOpts{Start: 0, End: &receiptBlock}
 
@@ -415,7 +417,8 @@ func checkLogWasConsumed(t *testing.T, fa fluxAggregatorUniverse, db *sqlx.DB, p
 
 	g := gomega.NewWithT(t)
 	g.Eventually(func() bool {
-		block := fa.backend.Blockchain().GetBlockByNumber(blockNumber)
+		block, err := fa.backend.BlockByNumber(testutils.Context(t), big.NewInt(int64(blockNumber)))
+		require.NoError(t, err)
 		require.NotNil(t, block)
 		orm := log.NewORM(db, fa.evmChainID)
 		consumed, err := orm.WasBroadcastConsumed(testutils.Context(t), block.Hash(), 0, pipelineSpecID)
