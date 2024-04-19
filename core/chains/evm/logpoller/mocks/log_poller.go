@@ -41,9 +41,9 @@ func (_m *LogPoller) Close() error {
 	return r0
 }
 
-// FilteredLogs provides a mock function with given fields: filter, limitAndSrt
-func (_m *LogPoller) FilteredLogs(filter query.KeyFilter, limitAndSrt query.LimitAndSort) ([]logpoller.Log, error) {
-	ret := _m.Called(filter, limitAndSrt)
+// FilteredLogs provides a mock function with given fields: ctx, filter, sortAndLimit, mapper
+func (_m *LogPoller) FilteredLogs(ctx context.Context, filter query.KeyFilter, sortAndLimit query.LimitAndSort) ([]logpoller.Log, error) {
+	ret := _m.Called(ctx, filter, sortAndLimit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FilteredLogs")
@@ -51,19 +51,19 @@ func (_m *LogPoller) FilteredLogs(filter query.KeyFilter, limitAndSrt query.Limi
 
 	var r0 []logpoller.Log
 	var r1 error
-	if rf, ok := ret.Get(0).(func(query.KeyFilter, query.LimitAndSort) ([]logpoller.Log, error)); ok {
-		return rf(filter, limitAndSrt)
+	if rf, ok := ret.Get(0).(func(context.Context, query.KeyFilter, query.LimitAndSort) ([]logpoller.Log, error)); ok {
+		return rf(ctx, filter, sortAndLimit)
 	}
-	if rf, ok := ret.Get(0).(func(query.KeyFilter, query.LimitAndSort) []logpoller.Log); ok {
-		r0 = rf(filter, limitAndSrt)
+	if rf, ok := ret.Get(0).(func(context.Context, query.KeyFilter, query.LimitAndSort) []logpoller.Log); ok {
+		r0 = rf(ctx, filter, sortAndLimit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]logpoller.Log)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(query.KeyFilter, query.LimitAndSort) error); ok {
-		r1 = rf(filter, limitAndSrt)
+	if rf, ok := ret.Get(1).(func(context.Context, query.KeyFilter, query.LimitAndSort) error); ok {
+		r1 = rf(ctx, filter, sortAndLimit)
 	} else {
 		r1 = ret.Error(1)
 	}

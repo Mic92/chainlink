@@ -60,8 +60,9 @@ type ORM interface {
 	SelectLogsDataWordRange(ctx context.Context, address common.Address, eventSig common.Hash, wordIndex int, wordValueMin, wordValueMax common.Hash, confs evmtypes.Confirmations) ([]Log, error)
 	SelectLogsDataWordGreaterThan(ctx context.Context, address common.Address, eventSig common.Hash, wordIndex int, wordValueMin common.Hash, confs evmtypes.Confirmations) ([]Log, error)
 	SelectLogsDataWordBetween(ctx context.Context, address common.Address, eventSig common.Hash, wordIndexMin int, wordIndexMax int, wordValue common.Hash, confs evmtypes.Confirmations) ([]Log, error)
+
 	// FilteredLogs accepts chainlink-common filtering DSL.
-	FilteredLogs(filter query.KeyFilter, sortAndLimit query.LimitAndSort) ([]Log, error)
+	FilteredLogs(ctx context.Context, filter query.KeyFilter, sortAndLimit query.LimitAndSort) ([]Log, error)
 }
 
 type DbORM struct {
@@ -91,10 +92,10 @@ func (o *DbORM) new(q sqlutil.DataSource) *DbORM { return NewORM(o.chainID, q, o
 // InsertBlock is idempotent to support replays.
 func (o *DbORM) InsertBlock(ctx context.Context, blockHash common.Hash, blockNumber int64, blockTimestamp time.Time, finalizedBlock int64) error {
 	args, err := newQueryArgs(o.chainID).
-		withCustomHashArg("block_hash", blockHash).
-		withCustomArg("block_number", blockNumber).
-		withCustomArg("block_timestamp", blockTimestamp).
-		withCustomArg("finalized_block_number", finalizedBlock).
+		withField("block_hash", blockHash).
+		withField("block_number", blockNumber).
+		withField("block_timestamp", blockTimestamp).
+		withField("finalized_block_number", finalizedBlock).
 		toArgs()
 	if err != nil {
 		return err
@@ -119,7 +120,7 @@ func (o *DbORM) InsertBlock(ctx context.Context, blockHash common.Hash, blockNum
 func (o *DbORM) InsertFilter(ctx context.Context, filter Filter) (err error) {
 	topicArrays := []types.HashArray{filter.Topic2, filter.Topic3, filter.Topic4}
 	args, err := newQueryArgs(o.chainID).
-		withCustomArg("name", filter.Name).
+		withField("name", filter.Name).
 		withRetention(filter.Retention).
 		withMaxLogsKept(filter.MaxLogsKept).
 		withLogsPerBlock(filter.LogsPerBlock).
@@ -931,8 +932,8 @@ func (o *DbORM) SelectIndexedLogsWithSigsExcluding(ctx context.Context, sigA, si
 		withTopicIndex(topicIndex).
 		withStartBlock(startBlock).
 		withEndBlock(endBlock).
-		withCustomHashArg("sigA", sigA).
-		withCustomHashArg("sigB", sigB).
+		withField("sigA", sigA).
+		withField("sigB", sigB).
 		withConfs(confs).
 		toArgs()
 	if err != nil {
@@ -971,9 +972,28 @@ func (o *DbORM) SelectIndexedLogsWithSigsExcluding(ctx context.Context, sigA, si
 	return logs, nil
 }
 
-func (o *DbORM) FilteredLogs(_ query.KeyFilter, _ query.LimitAndSort) ([]Log, error) {
-	//TODO implement me
-	panic("implement me")
+func (o *DbORM) FilteredLogs(ctx context.Context, filter query.KeyFilter, limit query.LimitAndSort) ([]Log, error) {
+	qs, args, err := (&pgDSLParser{}).buildQuery(o.chainID, filter.Expressions, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	values, err := args.toArgs()
+	if err != nil {
+		return nil, err
+	}
+
+	query, sqlArgs, err := o.db.BindNamed(qs, values)
+	if err != nil {
+		return nil, err
+	}
+
+	var logs []Log
+	if err := o.db.SelectContext(ctx, &logs, query, sqlArgs...); err != nil {
+		return nil, err
+	}
+
+	return logs, nil
 }
 
 func nestedBlockNumberQuery(confs evmtypes.Confirmations) string {
