@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 
@@ -39,13 +40,19 @@ type eventBinding struct {
 	// eventDataWords maps a generic name to a word index
 	// key is a predefined generic name for evm log event data word
 	// for eg. first evm data word(32bytes) of USDC log event is value so the key can be called value
-	eventDataWords map[string]uint8
-	id             string
+	eventDataWords  map[string]uint8
+	id              string
+	confidenceSteps []confidenceStep
 }
 
 type topicDetail struct {
 	abi.Argument
 	Index uint64
+}
+
+type confidenceStep struct {
+	confidence    float64
+	confirmations int
 }
 
 var _ readBinding = &eventBinding{}
@@ -392,9 +399,27 @@ func (e *eventBinding) remapPrimitive(key string, expression query.Expression) (
 		}
 
 		return logpoller.NewEventByTopicFilter(e.hash, e.topics[key].Index, primitive.ValueComparators), nil
+	case *primitives.Confidence:
+		return logpoller.NewConfirmationsFilter(e.confirmationsFrom(primitive.ConfidenceLevel)), nil
 	default:
 		return expression, nil
 	}
+}
+
+func (e *eventBinding) confirmationsFrom(confidence primitives.ConfidenceLevel) int {
+	// sort highest to lowest on confidence
+	sort.Slice(e.confidenceSteps, func(i, j int) bool {
+		return e.confidenceSteps[i].confidence > e.confidenceSteps[j].confidence
+	})
+
+	for _, step := range e.confidenceSteps {
+		if float64(confidence) >= step.confidence {
+			return step.confirmations
+		}
+	}
+
+	// return default of 0 if step doesn't exist
+	return 0
 }
 
 func wrapInternalErr(err error) error {

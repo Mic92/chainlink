@@ -1455,18 +1455,6 @@ func TestSelectLogsCreatedAfter(t *testing.T) {
 	}
 
 	filter := func(timestamp time.Time, confs evmtypes.Confirmations, topicIdx int, topicVals []common.Hash) query.KeyFilter {
-		var queryConfs primitives.ConfirmationLevel
-
-		switch confs {
-		case evmtypes.Finalized:
-			queryConfs = primitives.Finalized
-		case evmtypes.Unconfirmed:
-			queryConfs = primitives.Unconfirmed
-		default:
-			fmt.Println("default")
-			queryConfs = primitives.ConfirmationLevel(confs)
-		}
-
 		filters := []query.Expression{
 			logpoller.NewAddressFilter(address),
 			logpoller.NewEventSigFilter(event),
@@ -1490,7 +1478,7 @@ func TestSelectLogsCreatedAfter(t *testing.T) {
 
 		filters = append(filters, []query.Expression{
 			query.Timestamp(uint64(timestamp.Unix()), primitives.Gt),
-			query.Confirmation(queryConfs),
+			logpoller.NewConfirmationsFilter(int(confs)),
 		}...)
 
 		return query.KeyFilter{
@@ -1758,6 +1746,7 @@ func TestSelectLogsDataWordBetween(t *testing.T) {
 		},
 	}
 
+	low, _ := query.Confidence(primitives.Lowest)
 	wordFilter := func(word uint64) query.KeyFilter {
 		return query.KeyFilter{
 			Expressions: []query.Expression{
@@ -1769,7 +1758,7 @@ func TestSelectLogsDataWordBetween(t *testing.T) {
 				logpoller.NewEventByWordFilter(eventSig, 1, []primitives.ValueComparator{
 					{Value: logpoller.EvmWord(word).Hex(), Operator: primitives.Gte},
 				}),
-				query.Confirmation(primitives.Unconfirmed),
+				low,
 			},
 		}
 	}

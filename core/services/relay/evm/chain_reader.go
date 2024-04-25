@@ -4,14 +4,17 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/smartcontractkit/chainlink-common/pkg/codec"
 	"github.com/smartcontractkit/chainlink-common/pkg/types/query"
+	"github.com/smartcontractkit/chainlink-common/pkg/types/query/primitives"
 
 	commonservices "github.com/smartcontractkit/chainlink-common/pkg/services"
 	commontypes "github.com/smartcontractkit/chainlink-common/pkg/types"
@@ -209,17 +212,23 @@ func (cr *chainReader) addEvent(contractName, eventName string, a abi.ABI, chain
 		return err
 	}
 
+	steps, err := stepsFromConfig(chainReaderDefinition.ConfidenceConfirmations)
+	if err != nil {
+		return err
+	}
+
 	eb := &eventBinding{
-		contractName:   contractName,
-		eventName:      eventName,
-		lp:             cr.lp,
-		hash:           event.ID,
-		inputInfo:      inputInfo,
-		inputModifier:  inputModifier,
-		codecTopicInfo: codecTopicInfo,
-		topics:         make(map[string]topicDetail),
-		eventDataWords: chainReaderDefinition.GenericDataWordNames,
-		id:             wrapItemType(contractName, eventName, false) + uuid.NewString(),
+		contractName:    contractName,
+		eventName:       eventName,
+		lp:              cr.lp,
+		hash:            event.ID,
+		inputInfo:       inputInfo,
+		inputModifier:   inputModifier,
+		codecTopicInfo:  codecTopicInfo,
+		topics:          make(map[string]topicDetail),
+		eventDataWords:  chainReaderDefinition.GenericDataWordNames,
+		id:              wrapItemType(contractName, eventName, false) + uuid.NewString(),
+		confidenceSteps: steps,
 	}
 
 	cr.contractBindings.AddReadBinding(contractName, eventName, eb)
@@ -329,4 +338,41 @@ func setupEventInput(event abi.Event, def types.ChainReaderDefinition) ([]abi.Ar
 	}
 
 	return filterArgs, types.NewCodecEntry(inputArgs, nil, nil), indexArgNames
+}
+
+func stepsFromConfig(values map[string]int) ([]confidenceStep, error) {
+	// default steps of 0.0 -> Unconfirmed and 1.0 to Finalized could be set here
+	// but it seems dangerous in place of an error
+	if len(values) == 0 {
+		return nil, errors.New("confidence to confirmations mappings are not defined")
+	}
+
+	var hasLowestMapping, hasHighestMapping bool
+
+	result := make([]confidenceStep, 0, len(values))
+	for key, confirmations := range values {
+		confidence, err := strconv.ParseFloat(key, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		if confidence == float64(primitives.Lowest) {
+			hasLowestMapping = true
+		}
+
+		if confidence == float64(primitives.Highest) {
+			hasHighestMapping = true
+		}
+
+		result = append(result, confidenceStep{
+			confidence:    confidence,
+			confirmations: confirmations,
+		})
+	}
+
+	if !hasLowestMapping || !hasHighestMapping {
+		return nil, errors.New("confidence configuration should include highest and lowest mappings; highest can be -1 to indicated finalized")
+	}
+
+	return result, nil
 }
