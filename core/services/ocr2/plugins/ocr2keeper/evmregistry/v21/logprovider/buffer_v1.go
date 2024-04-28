@@ -185,6 +185,12 @@ func (b *logBuffer) SyncFilters(filterStore UpkeepFilterStore) error {
 		if ok && !filterStore.Has(uid) {
 			// remove upkeep that is not in the filter store
 			delete(b.queues, upkeepID)
+			for i, v := range b.queueIDs {
+				if v == upkeepID {
+					b.queueIDs = append(b.queueIDs[:i], b.queueIDs[i+1:]...)
+					break
+				}
+			}
 		}
 	}
 
