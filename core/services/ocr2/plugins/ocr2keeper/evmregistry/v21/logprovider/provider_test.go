@@ -318,7 +318,7 @@ func newEntry(p *logEventProvider, i int, args ...string) (LogTriggerConfig, upk
 }
 
 func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
-	t.Run("small number of upkeeps, 100 logs per upkeep per block for 100 blocks", func(t *testing.T) {
+	t.Run("5 upkeeps, 100 logs per upkeep per block for 100 blocks", func(t *testing.T) {
 		upkeepIDs := []*big.Int{
 			big.NewInt(1),
 			big.NewInt(2),
@@ -414,7 +414,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		assert.Equal(t, 9960, len(bufV1.queues["5"].logs))
 	})
 
-	t.Run("large number of upkeeps", func(t *testing.T) {
+	t.Run("200 upkeeps", func(t *testing.T) {
 		var upkeepIDs []*big.Int
 
 		for i := int64(1); i <= 200; i++ {
@@ -489,7 +489,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps
+		// the dequeue is evenly distributed across selected upkeeps
 		assert.Equal(t, 10000, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["50"].logs))
 		assert.Equal(t, 10000, len(bufV1.queues["101"].logs))
@@ -503,7 +503,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps
+		// the dequeue is evenly distributed across selected upkeeps
 		assert.Equal(t, 9999, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["50"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["101"].logs))
@@ -517,7 +517,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps
+		// the dequeue is evenly distributed across selected upkeeps
 		assert.Equal(t, 9999, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["50"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["101"].logs))
@@ -531,14 +531,14 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps
+		// the dequeue is evenly distributed across selected upkeeps
 		assert.Equal(t, 9998, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["50"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["101"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["150"].logs))
 	})
 
-	t.Run("large number of upkeeps, with logs added mid way through reading", func(t *testing.T) {
+	t.Run("200 upkeeps, increasing to 300 upkeeps mid way through the test", func(t *testing.T) {
 		var upkeepIDs []*big.Int
 
 		for i := int64(1); i <= 200; i++ {
@@ -615,7 +615,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps; with 2 iterations this means even upkeep IDs are dequeued first
+		// the dequeue is evenly distributed across selected upkeeps; with 2 iterations this means even upkeep IDs are dequeued first
 		assert.Equal(t, 10000, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["40"].logs))
 		assert.Equal(t, 10000, len(bufV1.queues["45"].logs))
@@ -631,7 +631,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps; on the second iteration, odd upkeep IDs are dequeued
+		// the dequeue is evenly distributed across selected upkeeps; on the second iteration, odd upkeep IDs are dequeued
 		assert.Equal(t, 9999, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["50"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["99"].logs))
@@ -647,7 +647,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps; on the third iteration, even upkeep IDs are dequeued once again
+		// the dequeue is evenly distributed across selected upkeeps; on the third iteration, even upkeep IDs are dequeued once again
 		assert.Equal(t, 9999, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["50"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["101"].logs))
@@ -686,7 +686,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps; the new iterations
+		// the dequeue is evenly distributed across selected upkeeps; the new iterations
 		// have not yet been recalculated despite the new logs being added; new iterations
 		// are only calculated when current iteration maxes out at the total number of iterations
 		assert.Equal(t, 9998, len(bufV1.queues["1"].logs))
@@ -706,7 +706,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps
+		// the dequeue is evenly distributed across selected upkeeps
 		assert.Equal(t, 9998, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["11"].logs))
 		assert.Equal(t, 9997, len(bufV1.queues["111"].logs))
@@ -723,7 +723,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
-		// the dequeue is evenly distributed across all upkeeps
+		// the dequeue is evenly distributed across selected upkeeps
 		assert.Equal(t, 9997, len(bufV1.queues["1"].logs))
 		assert.Equal(t, 9998, len(bufV1.queues["2"].logs))
 		assert.Equal(t, 9997, len(bufV1.queues["3"].logs))
