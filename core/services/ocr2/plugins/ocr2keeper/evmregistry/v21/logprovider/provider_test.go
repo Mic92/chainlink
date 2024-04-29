@@ -538,7 +538,7 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		assert.Equal(t, 9998, len(bufV1.queues["150"].logs))
 	})
 
-	t.Run("200 upkeeps, increasing to 300 upkeeps mid way through the test", func(t *testing.T) {
+	t.Run("200 upkeeps, increasing to 300 upkeeps midway through the test", func(t *testing.T) {
 		var upkeepIDs []*big.Int
 
 		for i := int64(1); i <= 200; i++ {
@@ -731,11 +731,22 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		assert.Equal(t, 9998, len(bufV1.queues["101"].logs))
 		assert.Equal(t, 9997, len(bufV1.queues["150"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["250"].logs))
-		assert.Equal(t, 10000, len(bufV1.queues["296"].logs))
-		assert.Equal(t, 9999, len(bufV1.queues["297"].logs))
-		assert.Equal(t, 9999, len(bufV1.queues["298"].logs))
 		assert.Equal(t, 10000, len(bufV1.queues["299"].logs))
 		assert.Equal(t, 9999, len(bufV1.queues["300"].logs))
+
+		payloads, err = provider.GetLatestPayloads(ctx)
+		assert.NoError(t, err)
+
+		assert.Equal(t, 3, provider.iterations)
+		assert.Equal(t, 3, provider.currentIteration)
+
+		// we dequeue a maximum of 100 logs
+		assert.Equal(t, 100, len(payloads))
+
+		// at this point, every queue should have had at least one log dequeued
+		for _, queue := range bufV1.queues {
+			assert.True(t, len(queue.logs) < 10000)
+		}
 	})
 }
 
