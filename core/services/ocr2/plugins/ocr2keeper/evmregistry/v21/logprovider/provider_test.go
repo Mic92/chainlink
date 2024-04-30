@@ -743,10 +743,15 @@ func TestLogEventProvider_GetLatestPayloads(t *testing.T) {
 		// we dequeue a maximum of 100 logs
 		assert.Equal(t, 100, len(payloads))
 
+		var remainingLogs int
 		// at this point, every queue should have had at least one log dequeued
 		for _, queue := range bufV1.queues {
 			assert.True(t, len(queue.logs) < 10000)
+			remainingLogs += len(queue.logs)
 		}
+
+		// check that across all 300 upkeeps, we have only dequeued 700 of the 3000000 logs (7 dequeue calls of 100 logs)
+		assert.Equal(t, 2999300, remainingLogs)
 	})
 }
 
