@@ -38,7 +38,7 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 
 	log := d.logger.Named("StandardCapability").Named("name from config")
 	var envVars []string
-	cmdName := "go run /Users/matthewpendrey/Projects/chainlink/core/services/standardcapability/test/simplestandardcapability.go" // get a better version of this from the test code
+	cmdName := "/Users/matthewpendrey/Projects/chainlink/core/services/standardcapability/simplestandardcapability/simplestandardcapability" // get a better version of this from the test code
 
 	cmdFn, opts, err := d.cfg.RegisterLOOP(plugins.CmdConfig{
 		ID:  log.Name(),
@@ -51,6 +51,16 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 	}
 
 	scs := loop.NewStandardCapabilityService(log, opts, cmdFn)
+
+	err = scs.Start(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error starting standard capability service: %v", err)
+	}
+
+	err = scs.WaitCtx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error waiting for standard capability service to start: %v", err)
+	}
 
 	capabilityID, err := scs.Service.NewStandardCapability(ctx, "", 0, 0, 0, 0, 0, 0)
 	if err != nil {
