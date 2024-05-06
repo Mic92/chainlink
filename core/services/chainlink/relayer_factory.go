@@ -11,6 +11,7 @@ import (
 	"github.com/smartcontractkit/chainlink-common/pkg/loop/adapters/relay"
 	"github.com/smartcontractkit/chainlink-common/pkg/sqlutil"
 	"github.com/smartcontractkit/chainlink-common/pkg/types"
+	coretypes "github.com/smartcontractkit/chainlink-common/pkg/types/core"
 	"github.com/smartcontractkit/chainlink-cosmos/pkg/cosmos"
 	coscfg "github.com/smartcontractkit/chainlink-cosmos/pkg/cosmos/config"
 	"github.com/smartcontractkit/chainlink-solana/pkg/solana"
@@ -33,7 +34,8 @@ type RelayerFactory struct {
 	logger.Logger
 	*plugins.LoopRegistry
 	loop.GRPCOpts
-	MercuryPool wsrpc.Pool
+	MercuryPool          wsrpc.Pool
+	CapabilitiesRegistry coretypes.CapabilitiesRegistry
 }
 
 type EVMFactoryConfig struct {
@@ -69,10 +71,11 @@ func (r *RelayerFactory) NewEVM(ctx context.Context, config EVMFactoryConfig) (m
 		}
 
 		relayerOpts := evmrelay.RelayerOpts{
-			DS:                ccOpts.DS,
-			CSAETHKeystore:    config.CSAETHKeystore,
-			MercuryPool:       r.MercuryPool,
-			TransmitterConfig: config.MercuryTransmitter,
+			DS:                   ccOpts.DS,
+			CSAETHKeystore:       config.CSAETHKeystore,
+			MercuryPool:          r.MercuryPool,
+			TransmitterConfig:    config.MercuryTransmitter,
+			CapabilitiesRegistry: r.CapabilitiesRegistry,
 		}
 		relayer, err2 := evmrelay.NewRelayer(lggr.Named(relayID.ChainID), chain, relayerOpts)
 		if err2 != nil {
