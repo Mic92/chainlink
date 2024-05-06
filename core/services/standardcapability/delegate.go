@@ -69,6 +69,8 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 
 	fmt.Printf("Created standard capability with id %d\n", capabilityID)
 
+	//d.registry.Add(ctx, capabilityID)
+
 	//here - now that the job configuration has been added, shoujld be able to configure and run a job
 
 	// Create a client to the capability, and register it with the registry, where does the proxying happen?
