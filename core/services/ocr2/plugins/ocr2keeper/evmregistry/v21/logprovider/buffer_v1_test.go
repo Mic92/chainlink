@@ -282,7 +282,6 @@ func TestLogEventBufferV1_Dequeue_highLoad(t *testing.T) {
 		assert.Equal(t, 95, len(bufV1.queues["4"].logs))
 		assert.Equal(t, 95, len(bufV1.queues["5"].logs))
 	})
-
 }
 
 func TestLogEventBufferV1_Enqueue(t *testing.T) {

@@ -329,7 +329,6 @@ func (p *logEventProvider) getLogsFromBuffer(latestBlock int64) []ocr2keepers.Up
 			}
 
 			start += int64(blockRate)
-
 		}
 		p.currentIteration++
 	default:
