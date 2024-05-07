@@ -38,6 +38,16 @@ func main() {
 type CustomStandardCapabilityService struct {
 }
 
+func (c CustomStandardCapabilityService) Info(ctx context.Context) (capabilities.CapabilityInfo, error) {
+	return capabilities.CapabilityInfo{
+		ID:             "3",
+		CapabilityType: capabilities.CapabilityTypeAction,
+		Description:    "",
+		Version:        "",
+		DON:            nil,
+	}, nil
+}
+
 func (c CustomStandardCapabilityService) RegisterToWorkflow(ctx context.Context, request capabilities.RegisterToWorkflowRequest) error {
 	return nil
 }

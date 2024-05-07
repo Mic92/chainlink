@@ -37,6 +37,8 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 
 	log := d.logger.Named("StandardCapability").Named("name from config")
 	var envVars []string
+
+	// Todo - this should come from some sort of url param on the job spec
 	cmdName := "/Users/matthewpendrey/Projects/chainlink/core/services/standardcapability/simplestandardcapability/simplestandardcapability" // get a better version of this from the test code
 
 	cmdFn, opts, err := d.cfg.RegisterLOOP(plugins.CmdConfig{
@@ -49,6 +51,7 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 		return nil, fmt.Errorf("error registering loop: %v", err)
 	}
 
+	// TODO based on job spec config can determine the capability type, and then create the appropriate capability loop
 	scs := loop.NewStandardCallbackCapability(log, opts, cmdFn)
 
 	err = scs.Start(ctx)
@@ -60,6 +63,19 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for standard capability service to start: %v", err)
 	}
+
+	info, err := scs.Service.Info(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting standard capability service info: %v", err)
+	}
+
+	// TODO here would validate the info matches that expected from the job spec and that the version and id match
+	// also determine capability type? no will need to config
+	fmt.Printf("Got info from standard capability: %v\n", info)
+
+	
+
+	todo - wire up services
 
 	err = scs.Service.Initialise(ctx, "", 0, 0, 0, 0, 0, 0)
 	if err != nil {
@@ -78,7 +94,6 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 	err = d.registry.Add(ctx, scs.Service)
 	if err != nil {
 		return nil, fmt.Errorf("error adding standard callback capability to registry: %w", err)
-
 	}
 
 	//here - test this
