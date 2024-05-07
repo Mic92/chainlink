@@ -8,6 +8,7 @@ import (
 	"github.com/pelletier/go-toml"
 	"github.com/pkg/errors"
 
+	"github.com/smartcontractkit/chainlink-common/pkg/capabilities"
 	"github.com/smartcontractkit/chainlink-common/pkg/loop"
 	"github.com/smartcontractkit/chainlink-common/pkg/types/core"
 	"github.com/smartcontractkit/chainlink/v2/core/logger"
@@ -34,8 +35,6 @@ func (d Delegate) BeforeJobCreated(job job.Job) {}
 
 func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.ServiceCtx, error) {
 
-	// Startup the binary here - how does this work for the existing median plugin etc?
-
 	log := d.logger.Named("StandardCapability").Named("name from config")
 	var envVars []string
 	cmdName := "/Users/matthewpendrey/Projects/chainlink/core/services/standardcapability/simplestandardcapability/simplestandardcapability" // get a better version of this from the test code
@@ -50,7 +49,7 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 		return nil, fmt.Errorf("error registering loop: %v", err)
 	}
 
-	scs := loop.NewStandardCapabilityService(log, opts, cmdFn)
+	scs := loop.NewStandardCallbackCapability(log, opts, cmdFn)
 
 	err = scs.Start(ctx)
 	if err != nil {
@@ -62,12 +61,32 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 		return nil, fmt.Errorf("error waiting for standard capability service to start: %v", err)
 	}
 
-	capabilityID, err := scs.Service.NewStandardCapability(ctx, "", 0, 0, 0, 0, 0, 0)
+	err = scs.Service.Initialise(ctx, "", 0, 0, 0, 0, 0, 0)
+	if err != nil {
+		return nil, fmt.Errorf("error initialising standard capability service: %v", err)
+	}
+
+	resultCh, err := scs.Service.Execute(ctx, capabilities.CapabilityRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating standard capability: %v", err)
 	}
 
-	fmt.Printf("Created standard capability with id %d\n", capabilityID)
+	for resp := range resultCh {
+		fmt.Printf("Got response from standard capability: %v\n", resp.Value)
+	}
+
+	err = d.registry.Add(ctx, scs.Service)
+	if err != nil {
+		return nil, fmt.Errorf("error adding standard callback capability to registry: %w", err)
+
+	}
+
+	//here - test this
+
+	//fmt.Printf("Created standard capability with id %d\n", capabilityID)
+
+	//get all this working and test methods of the capability, then wrap and register, after that will rename the job
+	//fields for the capability type
 
 	//d.registry.Add(ctx, capabilityID)
 
