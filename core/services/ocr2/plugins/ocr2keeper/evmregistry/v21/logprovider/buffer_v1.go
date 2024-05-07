@@ -127,14 +127,14 @@ func (b *logBuffer) Dequeue(start, end int64, upkeepLimit, maxResults int, upkee
 func (b *logBuffer) dequeue(start, end int64, upkeepLimit, capacity int, upkeepSelector func(id *big.Int) bool) ([]BufferedLog, int) {
 	var result []BufferedLog
 	var remainingLogs int
-	selectedUpkeeps := []string{}
+	var selectedUpkeeps int
 	numLogs := 0
 	for _, qid := range b.queueIDs {
 		q := b.queues[qid]
 		if !upkeepSelector(q.id) {
 			continue
 		}
-		selectedUpkeeps = append(selectedUpkeeps, q.id.String())
+		selectedUpkeeps++
 		logsInRange := q.sizeOfRange(start, end)
 		if logsInRange == 0 {
 			// if there are no logs in the range, skip the upkeep
@@ -157,7 +157,7 @@ func (b *logBuffer) dequeue(start, end int64, upkeepLimit, capacity int, upkeepS
 		numLogs += len(logs)
 		remainingLogs += remaining
 	}
-	b.lggr.Debugw("dequeued logs for upkeeps", "numUpkeeps", len(selectedUpkeeps), "numLogs", numLogs)
+	b.lggr.Debugw("dequeued logs for upkeeps", "selectedUpkeeps", selectedUpkeeps, "numLogs", numLogs)
 	return result, remainingLogs
 }
 
