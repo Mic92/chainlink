@@ -1,5 +1,49 @@
 # Changelog Chainlink Core
 
+## 2.12.1 - PREVIEW
+
+## added
+
+- [#12952](https://github.com/smartcontractkit/chainlink/pull/12952) [`7572a50`](https://github.com/smartcontractkit/chainlink/commit/7572a50a78a270188344786937f68233df82f65b) Thanks [@FelixFan1992](https://github.com/FelixFan1992)! - #added
+  compare user-defined max gas price with current gas price in automation simulation pipeline
+
+- [#12813](https://github.com/smartcontractkit/chainlink/pull/12813) [`ac89336`](https://github.com/smartcontractkit/chainlink/commit/ac893364e6c6ede08e9bf04da7dc64e0da94ab6e) Thanks [@matYang](https://github.com/matYang)! - #added ORM and corresponding tables for CCIP gas prices and token prices
+
+- [#12952](https://github.com/smartcontractkit/chainlink/pull/12952) [`7572a50`](https://github.com/smartcontractkit/chainlink/commit/7572a50a78a270188344786937f68233df82f65b) Thanks [@FelixFan1992](https://github.com/FelixFan1992)! - #added
+  pass a gas estimator to registry 2.1 pipeline
+
+- [#12952](https://github.com/smartcontractkit/chainlink/pull/12952) [`7572a50`](https://github.com/smartcontractkit/chainlink/commit/7572a50a78a270188344786937f68233df82f65b) Thanks [@FelixFan1992](https://github.com/FelixFan1992)! - #added an integration test for max gas price check
+
+## changed
+
+- [#13133](https://github.com/smartcontractkit/chainlink/pull/13133) [`2e66837`](https://github.com/smartcontractkit/chainlink/commit/2e668372ac54e71fd357feba427ffacf0613bda2) Thanks [@matYang](https://github.com/matYang)! - #changed CCIP price cache to use DB timestamp
+
+## updated
+
+- [#13084](https://github.com/smartcontractkit/chainlink/pull/13084) [`d79bdf1`](https://github.com/smartcontractkit/chainlink/commit/d79bdf16c5129cf7bc7cc5114f92eb07fd3fbf02) Thanks [@austinborn](https://github.com/austinborn)! - #updated Add gethwrappers for operatorforwarder contracts
+
+## bugfix
+
+- [#13058](https://github.com/smartcontractkit/chainlink/pull/13058) [`a34a17a`](https://github.com/smartcontractkit/chainlink/commit/a34a17ae9d62679a1ff15a7703f5cbcf6dfd1d0f) Thanks [@shileiwill](https://github.com/shileiwill)! - withdraw in offchain mode #bugfix
+
+- [#13088](https://github.com/smartcontractkit/chainlink/pull/13088) [`29b1636`](https://github.com/smartcontractkit/chainlink/commit/29b16360fb41e4372f72fe744aaf3ee8234a9b67) Thanks [@shileiwill](https://github.com/shileiwill)! - get available erc20 for payment #bugfix
+
+## internal
+
+- [#13008](https://github.com/smartcontractkit/chainlink/pull/13008) [`841fe61`](https://github.com/smartcontractkit/chainlink/commit/841fe61daa90b980f1e1622d2f7bd8f850b55462) Thanks [@HenryNguyen5](https://github.com/HenryNguyen5)! - #internal Keystone - rename type -> id
+
+- [#13094](https://github.com/smartcontractkit/chainlink/pull/13094) [`a0d1ce5`](https://github.com/smartcontractkit/chainlink/commit/a0d1ce5e9cddc540bba8eb193865646cf0ebc0a8) Thanks [@momentmaker](https://github.com/momentmaker)! - Refactor changesets release preview workflow #internal
+
+- [#13080](https://github.com/smartcontractkit/chainlink/pull/13080) [`36cc95f`](https://github.com/smartcontractkit/chainlink/commit/36cc95f6256b5ba418a916de2c9dc9597508147a) Thanks [@cds95](https://github.com/cds95)! - #internal Generate gethwrappers for capability registry changes
+
+- [#13112](https://github.com/smartcontractkit/chainlink/pull/13112) [`8059066`](https://github.com/smartcontractkit/chainlink/commit/80590662bd9956d3c93449ca4703a2430e0613b7) Thanks [@HenryNguyen5](https://github.com/HenryNguyen5)! - #internal Normalize keystone workflow ref regex property to match id regex
+
+- [#13102](https://github.com/smartcontractkit/chainlink/pull/13102) [`700a827`](https://github.com/smartcontractkit/chainlink/commit/700a82719451611381ab5dbb94fe00547660440b) Thanks [@cds95](https://github.com/cds95)! - #internal generate geth wrappers for capability registry remove nodes
+
+## untagged
+
+- [`4d48a17`](https://github.com/smartcontractkit/chainlink/commit/4d48a17703285515a4fc032516baa05e47b3001f) Thanks [@momentmaker](https://github.com/momentmaker)! - Test - remove after
+
 ## 2.12.0 - UNRELEASED
 
 ### Minor Changes
@@ -283,7 +327,7 @@
 
 - [#12412](https://github.com/smartcontractkit/chainlink/pull/12412) [`83c8688a14`](https://github.com/smartcontractkit/chainlink/commit/83c8688a14ac04111f999d132673ebaf6a364b4a) Thanks [@poopoothegorilla](https://github.com/poopoothegorilla)! - Bump grafana to 1.1.1
 
-- [#12248](https://github.com/smartcontractkit/chainlink/pull/12248) [`e1950769ee`](https://github.com/smartcontractkit/chainlink/commit/e1950769ee3ff2a40ca5772b9634c45f8be241cc) Thanks [@FelixFan1992](https://github.com/FelixFan1992)! - Add version support for automation registry 2.\*
+- [#12248](https://github.com/smartcontractkit/chainlink/pull/12248) [`e1950769ee`](https://github.com/smartcontractkit/chainlink/commit/e1950769ee3ff2a40ca5772b9634c45f8be241cc) Thanks [@FelixFan1992](https://github.com/FelixFan1992)! - Add version support for automation registry 2.*
 
 ## 2.10.0 - 2024-04-05
 
@@ -859,8 +903,8 @@ The following `AUDIT_LOGGER_*` environment variables below configure this option
 
 An optional list of HTTP headers to be added for every optional audit log event. If the above `AUDIT_LOGGER_FORWARD_TO_URL` is set, audit log events will be POSTed to that URL, and will include headers specified in this environment variable. One example use case is auth for example: `AUDIT_LOGGER_HEADERS="Authorization||{{token}}"`.
 
-Header keys and values are delimited on ||, and multiple headers can be added with a forward slash delimiter ('\\'). An example of multiple key value pairs:
-`AUDIT_LOGGER_HEADERS="Authorization||{{token}}\Some-Other-Header||{{token2}}"`
+Header keys and values are delimited on ||, and multiple headers can be added with a forward slash delimiter ('\'). An example of multiple key value pairs:
+`AUDIT_LOGGER_HEADERS="Authorization||{{token}}Some-Other-Header||{{token2}}"`
 
 ##### AUDIT_LOGGER_JSON_WRAPPER_KEY
 
@@ -1072,7 +1116,7 @@ If minConfirmations > 0 and failOnRevert=true then the ethtx task will error on 
 
 If `minConfirmations` is not set on the task, the chain default will be used which is usually 12 and always greater than 0.
 
-- `http` task now allows specification of request headers. Use like so: `foo [type=http headers="[\\"X-Header-1\\", \\"value1\\", \\"X-Header-2\\", \\"value2\\"]"]`.
+- `http` task now allows specification of request headers. Use like so: `foo [type=http headers="[\"X-Header-1\", \"value1\", \"X-Header-2\", \"value2\"]"]`.
 
 ### Fixed
 
@@ -1088,7 +1132,7 @@ If `minConfirmations` is not set on the task, the chain default will be used whi
 
 ### Fixed
 
-- Ensure failed EthSubscribe didn't register a (\*rpc.ClientSubscription)(nil) which would lead to a panic on Unsubscribe
+- Ensure failed EthSubscribe didn't register a (*rpc.ClientSubscription)(nil) which would lead to a panic on Unsubscribe
 - Fixes parsing of float values on job specs
 
 ## [1.4.0] - 2022-05-02
@@ -1113,7 +1157,7 @@ If `minConfirmations` is not set on the task, the chain default will be used whi
 ### Added
 
 - Added support for Keeper registry v1.2 in keeper jobs
-- Added disk rotating logs. Chainlink will now always log to disk at debug level. The default output directory for debug logs is Chainlink's root directory (ROOT_DIR) but can be configured by setting LOG_FILE_DIR. This makes it easier for node operators to report useful debugging information to Chainlink's team, since all the debug logs are conveniently located in one directory. Regular logging to STDOUT still works as before and respects the LOG_LEVEL env var. If you want to log in disk at a particular level, you can pipe STDOUT to disk. This automatic debug-logs-to-disk feature is enabled by default, and will remain enabled as long as the `LOG_FILE_MAX_SIZE` ENV var is set to a value greater than zero. The amount of disk space required for this feature to work can be calculated with the following formula: `LOG_FILE_MAX_SIZE` \* (`LOG_FILE_MAX_BACKUPS` + 1). If your disk doesn't have enough disk space, the logging will pause and the application will log Errors until space is available again. New environment variables related to this feature:
+- Added disk rotating logs. Chainlink will now always log to disk at debug level. The default output directory for debug logs is Chainlink's root directory (ROOT_DIR) but can be configured by setting LOG_FILE_DIR. This makes it easier for node operators to report useful debugging information to Chainlink's team, since all the debug logs are conveniently located in one directory. Regular logging to STDOUT still works as before and respects the LOG_LEVEL env var. If you want to log in disk at a particular level, you can pipe STDOUT to disk. This automatic debug-logs-to-disk feature is enabled by default, and will remain enabled as long as the `LOG_FILE_MAX_SIZE` ENV var is set to a value greater than zero. The amount of disk space required for this feature to work can be calculated with the following formula: `LOG_FILE_MAX_SIZE` * (`LOG_FILE_MAX_BACKUPS` + 1). If your disk doesn't have enough disk space, the logging will pause and the application will log Errors until space is available again. New environment variables related to this feature:
   - `LOG_FILE_MAX_SIZE` (default: 5120mb) - this env var allows you to override the log file's max size (in megabytes) before file rotation.
   - `LOG_FILE_MAX_AGE` (default: 0) - if `LOG_FILE_MAX_SIZE` is set, this env var allows you to override the log file's max age (in days) before file rotation. Keeping this config with the default value means not to remove old log files.
   - `LOG_FILE_MAX_BACKUPS` (default: 1) - if `LOG_FILE_MAX_SIZE` is set, this env var allows you to override the max amount of old log files to retain. Keeping this config with the default value means to retain 1 old log file at most (though `LOG_FILE_MAX_AGE` may still cause them to get deleted). If this is set to 0, the node will retain all old log files instead.
@@ -2056,7 +2100,7 @@ Note that it has no effect on FMv1 jobs. Node operators will need to upgrade to 
 - Task definitions in v2 jobs (those with TOML specs) now support quoting strings with angle brackets (which DOT already permitted). This is particularly useful when defining JSON blobs to post to external adapters. For example:
 
   ```
-  my_bridge [type=bridge name="my_bridge" requestData="{\\"hi\\": \\"hello\\"}"]
+  my_bridge [type=bridge name="my_bridge" requestData="{\"hi\": \"hello\"}"]
   ```
 
   ... can now be written as:
