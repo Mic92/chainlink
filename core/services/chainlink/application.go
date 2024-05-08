@@ -446,7 +446,7 @@ func NewApplication(opts ApplicationOpts) (Application, error) {
 
 	loopRegistrarConfig := plugins.NewRegistrarConfig(opts.GRPCOpts, opts.LoopRegistry.Register, opts.LoopRegistry.Unregister)
 
-	delegates[job.StandardCapability] = standardcapability.NewDelegate(globalLogger, registry, loopRegistrarConfig)
+	delegates[job.StandardCapability] = standardcapability.NewDelegate(globalLogger, opts.DS, registry, loopRegistrarConfig, telemetryManager)
 
 	if cfg.OCR2().Enabled() {
 		globalLogger.Debug("Off-chain reporting v2 enabled")

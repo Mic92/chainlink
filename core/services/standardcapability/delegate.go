@@ -10,21 +10,26 @@ import (
 
 	"github.com/smartcontractkit/chainlink-common/pkg/capabilities"
 	"github.com/smartcontractkit/chainlink-common/pkg/loop"
+	"github.com/smartcontractkit/chainlink-common/pkg/sqlutil"
 	"github.com/smartcontractkit/chainlink-common/pkg/types/core"
 	"github.com/smartcontractkit/chainlink/v2/core/logger"
 	"github.com/smartcontractkit/chainlink/v2/core/services/job"
+	"github.com/smartcontractkit/chainlink/v2/core/services/ocr2/plugins/generic"
+	"github.com/smartcontractkit/chainlink/v2/core/services/telemetry"
 	"github.com/smartcontractkit/chainlink/v2/plugins"
 )
 
 type Delegate struct {
-	logger   logger.Logger
-	registry core.CapabilitiesRegistry
-	cfg      plugins.RegistrarConfig
+	logger                logger.Logger
+	ds                    sqlutil.DataSource
+	registry              core.CapabilitiesRegistry
+	cfg                   plugins.RegistrarConfig
+	monitoringEndpointGen telemetry.MonitoringEndpointGenerator
 }
 
-func NewDelegate(logger logger.Logger, registry core.CapabilitiesRegistry,
-	cfg plugins.RegistrarConfig) *Delegate {
-	return &Delegate{logger: logger, registry: registry, cfg: cfg}
+func NewDelegate(logger logger.Logger, ds sqlutil.DataSource, registry core.CapabilitiesRegistry,
+	cfg plugins.RegistrarConfig, monitoringEndpointGen telemetry.MonitoringEndpointGenerator) *Delegate {
+	return &Delegate{logger: logger, ds: ds, registry: registry, cfg: cfg, monitoringEndpointGen: monitoringEndpointGen}
 }
 
 func (d Delegate) JobType() job.Type {
@@ -33,7 +38,7 @@ func (d Delegate) JobType() job.Type {
 
 func (d Delegate) BeforeJobCreated(job job.Job) {}
 
-func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.ServiceCtx, error) {
+func (d Delegate) ServicesForSpec(ctx context.Context, jb job.Job) ([]job.ServiceCtx, error) {
 
 	log := d.logger.Named("StandardCapability").Named("name from config")
 	var envVars []string
@@ -65,23 +70,24 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 	}
 
 	info, err := scs.Service.Info(ctx)
+
 	if err != nil {
 		return nil, fmt.Errorf("error getting standard capability service info: %v", err)
 	}
 
-	// TODO here would validate the info matches that expected from the job spec and that the version and id match
-	// also determine capability type? no will need to config
+	// TODO here would validate the info matches that expected from the job spec and that the version, id and type match
+	// those declared in the job spec
 	fmt.Printf("Got info from standard capability: %v\n", info)
 
-	
+	kvStore := job.NewKVStore(jb.ID, d.ds, log)
+	telemetryService := generic.NewTelemetryAdapter(d.monitoringEndpointGen)
 
-	todo - wire up services
-
-	err = scs.Service.Initialise(ctx, "", 0, 0, 0, 0, 0, 0)
+	err = scs.Service.Initialise(ctx, "", telemetryService, kvStore)
 	if err != nil {
 		return nil, fmt.Errorf("error initialising standard capability service: %v", err)
 	}
 
+	// here - shonky test for now to check communication with the capability
 	resultCh, err := scs.Service.Execute(ctx, capabilities.CapabilityRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating standard capability: %v", err)
@@ -90,50 +96,13 @@ func (d Delegate) ServicesForSpec(ctx context.Context, job job.Job) ([]job.Servi
 	for resp := range resultCh {
 		fmt.Printf("Got response from standard capability: %v\n", resp.Value)
 	}
+	// end of shonky test
 
 	err = d.registry.Add(ctx, scs.Service)
 	if err != nil {
 		return nil, fmt.Errorf("error adding standard callback capability to registry: %w", err)
 	}
 
-	//here - test this
-
-	//fmt.Printf("Created standard capability with id %d\n", capabilityID)
-
-	//get all this working and test methods of the capability, then wrap and register, after that will rename the job
-	//fields for the capability type
-
-	//d.registry.Add(ctx, capabilityID)
-
-	//here - now that the job configuration has been added, shoujld be able to configure and run a job
-
-	// Create a client to the capability, and register it with the registry, where does the proxying happen?
-
-	/*
-		d.registry.Add(ctx, capability)
-
-		median := loop.NewMedianService(lggr, telem, cmdFn, medianProvider, dataSource, juelsPerFeeCoinSource, errorLog)
-		argsNoPlugin.ReportingPluginFactory = median
-		srvs = append(srvs, median)
-
-		// see this-> if cmdName := env.MedianPlugin.Cmd.Get(); cmdName != "" {
-
-		//1 start up the binary assume it's a loop binary
-
-		// wait for startup by listening to the loop registry? then wire up dependencies by passing over service ids to the loop binary? or is there a different way
-		// that services are passed to the loop binary?
-
-		// register the capability with the capability registry
-
-		// return a service context  to enable shutdown
-
-		// So approach is to create a bare bones impl for the above, then figure out how to configure the core to test it
-
-		// After all this is done and tested, need to figure out how the binary will be deployed and loaded in practise.
-
-		d.registry.
-
-	*/
 	return nil, nil
 }
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/smartcontractkit/chainlink-common/pkg/capabilities"
 	"github.com/smartcontractkit/chainlink-common/pkg/loop"
+	"github.com/smartcontractkit/chainlink-common/pkg/types/core"
 	"github.com/smartcontractkit/chainlink-common/pkg/values"
 )
 
@@ -27,7 +28,7 @@ func main() {
 		HandshakeConfig: loop.StandardCallbackCapabilityHandshakeConfig(),
 		Plugins: map[string]plugin.Plugin{
 			loop.PluginStandardCallbackCapabilityName: &loop.StandardCallbackCapabilityLoop{
-				PluginServer: CustomStandardCapabilityService{},
+				PluginServer: &CustomStandardCapabilityService{},
 				BrokerConfig: loop.BrokerConfig{Logger: s.Logger, StopCh: stopCh, GRPCOpts: s.GRPCOpts},
 			},
 		},
@@ -36,9 +37,11 @@ func main() {
 }
 
 type CustomStandardCapabilityService struct {
+	telemetryService core.TelemetryService
+	store            core.KeyValueStore
 }
 
-func (c CustomStandardCapabilityService) Info(ctx context.Context) (capabilities.CapabilityInfo, error) {
+func (c *CustomStandardCapabilityService) Info(ctx context.Context) (capabilities.CapabilityInfo, error) {
 	return capabilities.CapabilityInfo{
 		ID:             "3",
 		CapabilityType: capabilities.CapabilityTypeAction,
@@ -48,16 +51,21 @@ func (c CustomStandardCapabilityService) Info(ctx context.Context) (capabilities
 	}, nil
 }
 
-func (c CustomStandardCapabilityService) RegisterToWorkflow(ctx context.Context, request capabilities.RegisterToWorkflowRequest) error {
+func (c *CustomStandardCapabilityService) RegisterToWorkflow(ctx context.Context, request capabilities.RegisterToWorkflowRequest) error {
 	return nil
 }
 
-func (c CustomStandardCapabilityService) UnregisterFromWorkflow(ctx context.Context, request capabilities.UnregisterFromWorkflowRequest) error {
+func (c *CustomStandardCapabilityService) UnregisterFromWorkflow(ctx context.Context, request capabilities.UnregisterFromWorkflowRequest) error {
 	return nil
 }
 
-func (c CustomStandardCapabilityService) Execute(ctx context.Context, request capabilities.CapabilityRequest) (<-chan capabilities.CapabilityResponse, error) {
+func (c *CustomStandardCapabilityService) Execute(ctx context.Context, request capabilities.CapabilityRequest) (<-chan capabilities.CapabilityResponse, error) {
 	result := make(chan capabilities.CapabilityResponse, 100)
+
+	err := c.store.Store(ctx, "key", []byte("value"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to store key: %w", err)
+	}
 
 	go func() {
 		defer close(result)
@@ -79,26 +87,30 @@ func (c CustomStandardCapabilityService) Execute(ctx context.Context, request ca
 	return result, nil
 }
 
-func (c CustomStandardCapabilityService) Initialise(ctx context.Context, config string, errorLogID uint32, pipelineRunnerID uint32, telemetryID uint32, capRegistryID uint32, keyValueStoreID uint32, relayerSetID uint32) error {
+func (c *CustomStandardCapabilityService) Initialise(ctx context.Context, config string, telemetryService core.TelemetryService, store core.KeyValueStore) error {
+
+	c.telemetryService = telemetryService
+	c.store = store
+
 	return nil
 }
 
-func (c CustomStandardCapabilityService) Start(ctx context.Context) error {
+func (c *CustomStandardCapabilityService) Start(ctx context.Context) error {
 	return nil
 }
 
-func (c CustomStandardCapabilityService) Close() error {
+func (c *CustomStandardCapabilityService) Close() error {
 	return nil
 }
 
-func (c CustomStandardCapabilityService) Ready() error {
+func (c *CustomStandardCapabilityService) Ready() error {
 	return nil
 }
 
-func (c CustomStandardCapabilityService) HealthReport() map[string]error {
+func (c *CustomStandardCapabilityService) HealthReport() map[string]error {
 	return map[string]error{}
 }
 
-func (c CustomStandardCapabilityService) Name() string {
+func (c *CustomStandardCapabilityService) Name() string {
 	return "simplestandardcapability"
 }
