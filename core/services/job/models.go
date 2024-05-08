@@ -874,9 +874,14 @@ func (w *WorkflowSpec) Validate() error {
 }
 
 type StandardCapabilitySpec struct {
-	ID        int32
-	CreatedAt time.Time `toml:"-"`
-	UpdatedAt time.Time `toml:"-"`
+	ID               int32
+	CreatedAt        time.Time `toml:"-"`
+	UpdatedAt        time.Time `toml:"-"`
+	BinaryUrl        string
+	CapabilityType   string
+	CapabilityConfig string
+
+	//TODO should this have the expected capability ID and version as well for verification?
 }
 
 func (w StandardCapabilitySpec) GetID() string {

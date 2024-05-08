@@ -41,35 +41,53 @@ func (d Delegate) BeforeJobCreated(job job.Job) {}
 func (d Delegate) ServicesForSpec(ctx context.Context, jb job.Job) ([]job.ServiceCtx, error) {
 
 	log := d.logger.Named("StandardCapability").Named("name from config")
-	var envVars []string
 
-	// Todo - this should come from some sort of url param on the job spec
-	cmdName := "/Users/matthewpendrey/Projects/chainlink/core/services/standardcapability/simplestandardcapability/simplestandardcapability" // get a better version of this from the test code
+	cmdName := jb.StandardCapabilitySpec.BinaryUrl
+
+	// TEMP override
+	cmdName = "/Users/matthewpendrey/Projects/chainlink/core/services/standardcapability/simplestandardcapability/simplestandardcapability" // get a better version of this from the test code
 
 	cmdFn, opts, err := d.cfg.RegisterLOOP(plugins.CmdConfig{
 		ID:  log.Name(),
 		Cmd: cmdName,
-		Env: envVars,
+		Env: nil,
 	})
 
 	if err != nil {
 		return nil, fmt.Errorf("error registering loop: %v", err)
 	}
 
-	// TODO based on job spec config can determine the capability type, and then create the appropriate capability loop
-	scs := loop.NewStandardCallbackCapability(log, opts, cmdFn)
+	var capabilityLoop *loop.StandardCallbackCapabilityService
 
-	err = scs.Start(ctx)
+	// TEMP set this
+	jb.StandardCapabilitySpec.CapabilityType = capabilities.CapabilityTypeAction.String()
+
+	switch jb.StandardCapabilitySpec.CapabilityType {
+	case capabilities.CapabilityTypeAction.String():
+		fallthrough
+	case capabilities.CapabilityTypeConsensus.String():
+		fallthrough
+	case capabilities.CapabilityTypeTarget.String():
+		capabilityLoop = loop.NewStandardCallbackCapability(log, opts, cmdFn)
+	case capabilities.CapabilityTypeTrigger.String():
+		// TODO - impl the trigger capability loop
+	default:
+		return nil, fmt.Errorf("unsupported capability type: %s", jb.StandardCapabilitySpec.CapabilityType)
+	}
+
+	// TODO Move the below into service context
+
+	err = capabilityLoop.Start(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error starting standard capability service: %v", err)
 	}
 
-	err = scs.WaitCtx(ctx)
+	err = capabilityLoop.WaitCtx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for standard capability service to start: %v", err)
 	}
 
-	info, err := scs.Service.Info(ctx)
+	info, err := capabilityLoop.Service.Info(ctx)
 
 	if err != nil {
 		return nil, fmt.Errorf("error getting standard capability service info: %v", err)
@@ -79,16 +97,21 @@ func (d Delegate) ServicesForSpec(ctx context.Context, jb job.Job) ([]job.Servic
 	// those declared in the job spec
 	fmt.Printf("Got info from standard capability: %v\n", info)
 
+	// Not required?
+	if info.CapabilityType.String() != jb.StandardCapabilitySpec.CapabilityType {
+		return nil, fmt.Errorf("capability type mismatch: %s != %s", info.CapabilityType, jb.StandardCapabilitySpec.CapabilityType)
+	}
+
 	kvStore := job.NewKVStore(jb.ID, d.ds, log)
 	telemetryService := generic.NewTelemetryAdapter(d.monitoringEndpointGen)
 
-	err = scs.Service.Initialise(ctx, "", telemetryService, kvStore)
+	err = capabilityLoop.Service.Initialise(ctx, jb.StandardCapabilitySpec.CapabilityConfig, telemetryService, kvStore)
 	if err != nil {
 		return nil, fmt.Errorf("error initialising standard capability service: %v", err)
 	}
 
 	// here - shonky test for now to check communication with the capability
-	resultCh, err := scs.Service.Execute(ctx, capabilities.CapabilityRequest{})
+	resultCh, err := capabilityLoop.Service.Execute(ctx, capabilities.CapabilityRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error creating standard capability: %v", err)
 	}
@@ -98,7 +121,8 @@ func (d Delegate) ServicesForSpec(ctx context.Context, jb job.Job) ([]job.Servic
 	}
 	// end of shonky test
 
-	err = d.registry.Add(ctx, scs.Service)
+	// TODO - move this into the capability -
+	err = d.registry.Add(ctx, capabilityLoop.Service)
 	if err != nil {
 		return nil, fmt.Errorf("error adding standard callback capability to registry: %w", err)
 	}
@@ -135,6 +159,8 @@ func ValidatedStandardCapabilitySpec(tomlString string) (job.Job, error) {
 	if jb.Type != job.StandardCapability {
 		return jb, errors.Errorf("standard capability unsupported job type %s", jb.Type)
 	}
+
+	// TODO other validation
 
 	return jb, nil
 }
